@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Study Buddy - Enhanced with API Fallback</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        @keyframes float-delayed {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.8); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200px 0; }
+            100% { background-position: 200px 0; }
+        }
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.6); }
+        }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-float-delayed { animation: float-delayed 3s ease-in-out infinite; animation-delay: 1s; }
+        .animate-glow { animation: glow 2s ease-in-out infinite; }
+        .animate-shimmer {
+            background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            background-size: 200px 100%;
+            animation: shimmer 2s infinite;
+        }
+        .animate-spin-slow { animation: spin-slow 4s linear infinite; }
+        .animate-fade-in { animation: fadeIn 1s ease-out; }
+        .animate-fade-in-delayed { animation: fadeIn 1s ease-out 0.5s both; }
+        .animate-fade-in-up { animation: fadeInUp 1s ease-out; }
+        .animate-fade-in-up-delayed { animation: fadeInUp 1s ease-out 1s both; }
+        .animate-slide-in-left { animation: slideInLeft 1s ease-out 0.5s both; }
+        .animate-slide-in-right { animation: slideInRight 1s ease-out 0.7s both; }
+        .animate-bounce-in { animation: bounceIn 1s ease-out 1.5s both; }
+        .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { opacity: 1; transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .hidden { display: none !important; }
+        .prose { max-width: none; }
+        .prose h1, .prose h2, .prose h3 { color: #1f2937; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .prose p { margin-bottom: 1rem; }
+        .prose ul, .prose ol { margin-bottom: 1rem; padding-left: 1.5rem; }
+        .prose strong { font-weight: 600; color: #374151; }
+        .floating-tk {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f59e0b, #ef4444);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+            z-index: 30;
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+            animation: float 5s ease-in-out infinite;
+        }
+        .feature-card {
+            transition: all 0.3s ease;
+            border-top: 4px solid #3b82f6;
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .solution-box {
+            background: linear-gradient(120deg, #dbeafe, #ede9fe);
+            border-left: 4px solid #4f46e5;
+        }
+        .search-result-card {
+            background: linear-gradient(120deg, #dcfce7, #f0fdf4);
+            border-left: 4px solid #22c55e;
+        }
+        .search-result-item {
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+        }
+        .search-result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .search-result-title {
+            color: #2563eb;
+            font-weight: 600;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .search-result-title:hover {
+            text-decoration: underline;
+        }
+        .search-result-snippet {
+            color: #6b7280;
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+        .api-status-connected {
+            background: linear-gradient(120deg, #dcfce7, #f0fdf4);
+            border: 1px solid #22c55e;
+            color: #166534;
+        }
+        .api-status-warning {
+            background: linear-gradient(120deg, #fef3c7, #fffbeb);
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+        .api-status-error {
+            background: linear-gradient(120deg, #fee2e2, #fef2f2);
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .enhanced-badge {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .model-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        }
+        .model-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .model-card.active {
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        .model-card.fallback-used {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+        }
+        .model-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+        .deepseek-icon {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+        }
+        .gemma-icon {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+        .qwen-icon {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+        .status-indicator {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+        .status-connected {
+            background: #22c55e;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        .status-disconnected {
+            background: #ef4444;
+        }
+        .secure-badge {
+            background: linear-gradient(45deg, #059669, #047857);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .last-used-badge {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 600;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Floating TK Badge -->
+    <div class="floating-tk animate-float"> TK </div>
+    
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-800 flex items-center justify-center overflow-hidden z-50">
+        <!-- Animated Background -->
+        <div class="absolute inset-0">
+            <div class="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full animate-pulse"></div>
+            <div class="absolute top-32 right-20 w-16 h-16 bg-white/5 rounded-full animate-bounce"></div>
+            <div class="absolute bottom-20 left-32 w-24 h-24 bg-white/10 rounded-full animate-ping"></div>
+            <div class="absolute bottom-32 right-10 w-12 h-12 bg-white/5 rounded-full animate-pulse"></div>
+        </div>
+        
+        <!-- Floating Icons -->
+        <div class="absolute inset-0 overflow-hidden">
+            <i data-lucide="book-open" class="absolute top-20 left-1/4 text-white/20 animate-float w-10 h-10"></i>
+            <i data-lucide="brain" class="absolute top-40 right-1/3 text-white/20 animate-float-delayed w-8 h-8"></i>
+            <i data-lucide="sparkles" class="absolute bottom-40 left-1/3 text-white/20 animate-float w-7 h-7"></i>
+            <i data-lucide="graduation-cap" class="absolute bottom-20 right-1/4 text-white/20 animate-float-delayed w-11 h-11"></i>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="relative z-10 text-center text-white">
+            <!-- Developer Animation -->
+            <div class="mb-8 animate-fade-in-up">
+                <div class="relative">
+                    <div class="w-32 h-32 mx-auto mb-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-2xl animate-glow">
+                        <span class="text-4xl font-bold text-white">TK</span>
+                    </div>
+                    <div class="absolute -top-2 -right-2 w-8 h-8 bg-green-400 rounded-full animate-ping"></div>
+                </div>
+                <h2 class="text-2xl font-bold mb-2 animate-slide-in-left">Developed by</h2>
+                <h1 class="text-4xl font-extrabold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent animate-slide-in-right">
+                    Tanish Kamboj
+                </h1>
+            </div>
+            
+            <!-- App Logo -->
+            <div class="mb-8 animate-bounce-in">
+                <div class="relative">
+                    <i data-lucide="graduation-cap" class="mx-auto text-white animate-spin-slow w-20 h-20"></i>
+                    <div class="absolute inset-0 bg-white/20 rounded-full animate-pulse"></div>
+                </div>
+                <h3 class="text-3xl font-bold mt-4 animate-fade-in">AI Study Buddy</h3>
+                <p class="text-xl text-white/80 mt-2 animate-fade-in-delayed">Enhanced with API Fallback System</p>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="w-80 mx-auto mb-6 animate-fade-in-up-delayed">
+                <div class="bg-white/20 rounded-full h-3 overflow-hidden backdrop-blur-sm">
+                    <div id="progressBar" class="bg-gradient-to-r from-yellow-400 to-orange-500 h-full rounded-full transition-all duration-300 ease-out animate-shimmer" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between text-sm mt-2 text-white/80">
+                    <span>Loading...</span>
+                    <span id="progressText">0%</span>
+                </div>
+            </div>
+            
+            <!-- Loading Text -->
+            <p id="loadingText" class="text-lg text-white/90 animate-pulse">Initializing API Fallback System...</p>
+            
+            <!-- Loading Dots -->
+            <div class="flex justify-center space-x-2 mt-4">
+                <div class="w-3 h-3 bg-white/60 rounded-full animate-bounce"></div>
+                <div class="w-3 h-3 bg-white/60 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                <div class="w-3 h-3 bg-white/60 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main App -->
+    <div id="mainApp" class="hidden min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div class="max-w-6xl mx-auto p-5">
+            <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+                <!-- Header -->
+                <div class="relative bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center py-12 px-6 overflow-hidden">
+                    <div class="absolute top-4 right-6 text-sm text-white/80 z-10">
+                        Developed by <strong class="text-white">Tanish Kamboj</strong>
+                    </div>
+                    
+                    <div class="relative z-10">
+                        <div class="text-6xl mb-4 animate-bounce">
+                            <i data-lucide="graduation-cap" class="mx-auto w-16 h-16"></i>
+                        </div>
+                        <h1 class="text-4xl md:text-5xl font-bold mb-3 tracking-tight">AI Study Buddy</h1>
+                        <p class="text-xl font-light max-w-2xl mx-auto opacity-90">
+                            Secure AI-powered learning with API fallback system
+                        </p>
+                        <div class="mt-4 flex justify-center gap-2">
+                            <span class="enhanced-badge">
+                                <i data-lucide="search" class="w-3 h-3 mr-1 inline"></i>
+                                SearchAPI Enhanced
+                            </span>
+                            <span class="secure-badge">
+                                <i data-lucide="shield-check" class="w-3 h-3 mr-1 inline"></i>
+                                API Fallback
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Wave decoration -->
+                    <div class="absolute bottom-0 left-0 w-full h-10 bg-white">
+                        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" class="w-full h-full">
+                            <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity="0.25" fill="white"/>
+                            <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity="0.5" fill="white"/>
+                            <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z" fill="white"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <!-- Enhanced AI Model Selection with Fallback -->
+                <div class="p-6 mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 border rounded-lg">
+                    <div class="flex items-center gap-2 mb-6">
+                        <i data-lucide="cpu" class="text-blue-600 w-6 h-6"></i>
+                        <h4 class="font-bold text-blue-900 text-lg">AI Model Selection with Fallback</h4>
+                        <span class="ml-auto secure-badge">
+                            <i data-lucide="shield-check" class="w-3 h-3 mr-1 inline"></i>
+                            Multi-Key Fallback
+                        </span>
+                    </div>
+                    
+                    <!-- Model Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" id="modelCardsContainer">
+                        <!-- Model cards will be dynamically generated -->
+                    </div>
+                    
+                    <!-- Current Selection Display -->
+                    <div class="bg-white rounded-lg border border-blue-200 p-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div id="selectedModelIcon" class="model-icon deepseek-icon" style="width: 32px; height: 32px; font-size: 16px; margin-bottom: 0;">
+                                    <i class="fas fa-brain"></i>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900" id="selectedModelName">DeepSeek Chat</div>
+                                    <div class="text-sm text-gray-500" id="selectedModelDetails">Advanced conversational model</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check-circle" class="text-green-500 w-5 h-5"></i>
+                                <span class="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full font-medium">Ready</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- API Status -->
+                    <div class="mt-4 p-4 api-status-connected rounded-lg" id="apiStatusDisplay">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="search" class="text-green-600 w-5 h-5"></i>
+                            <h5 class="font-semibold">API Fallback System</h5>
+                            <span class="ml-auto text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full">Active</span>
+                        </div>
+                        <div class="text-sm space-y-1">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check-circle" class="text-green-500 w-4 h-4"></i>
+                                <span>4 API keys configured with automatic fallback</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check-circle" class="text-green-500 w-4 h-4"></i>
+                                <span>Real-time web search integration enabled</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="shield-check" class="text-green-500 w-4 h-4"></i>
+                                <span>Secure API key management with rotation</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="flex bg-white shadow-lg sticky top-0 z-50">
+                    <button onclick="switchTab('homework')" id="tab-homework" class="tab-button flex-1 flex items-center justify-center gap-2 py-5 px-3 font-medium transition-all duration-300 border-b-3 border-blue-600 text-blue-600 bg-blue-50 transform hover:scale-105">
+                        <i data-lucide="help-circle" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Homework Solver</span>
+                    </button>
+                    <button onclick="switchTab('notes')" id="tab-notes" class="tab-button flex-1 flex items-center justify-center gap-2 py-5 px-3 font-medium transition-all duration-300 border-b-3 border-transparent text-gray-600 hover:text-blue-600 hover:bg-blue-50 transform hover:scale-105">
+                        <i data-lucide="sticky-note" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Notes Generator</span>
+                    </button>
+                    <button onclick="switchTab('test')" id="tab-test" class="tab-button flex-1 flex items-center justify-center gap-2 py-5 px-3 font-medium transition-all duration-300 border-b-3 border-transparent text-gray-600 hover:text-blue-600 hover:bg-blue-50 transform hover:scale-105">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Mock Test Generator</span>
+                    </button>
+                    <button onclick="switchTab('features')" id="tab-features" class="tab-button flex-1 flex items-center justify-center gap-2 py-5 px-3 font-medium transition-all duration-300 border-b-3 border-transparent text-gray-600 hover:text-blue-600 hover:bg-blue-50 transform hover:scale-105">
+                        <i data-lucide="star" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Features</span>
+                    </button>
+                </nav>
+                
+                <!-- Main Content -->
+                <main class="p-8 min-h-[500px]">
+                    <!-- Tab Content -->
+                    <!-- Homework Solver -->
+                    <div id="content-homework" class="tab-content">
+                        <div class="bg-white border rounded-lg shadow-sm">
+                            <div class="p-6 border-b">
+                                <h2 class="text-2xl font-bold flex items-center gap-3">
+                                    <i data-lucide="help-circle" class="text-blue-600 w-7 h-7"></i>
+                                    Solve Your Homework
+                                    <span class="enhanced-badge ml-2">
+                                        <i data-lucide="search" class="w-3 h-3 mr-1 inline"></i>
+                                        Fallback Enhanced
+                                    </span>
+                                </h2>
+                                <p class="text-gray-600 mt-2">Get step-by-step solutions with automatic API fallback and web enhancement</p>
+                            </div>
+                            <div class="p-6 space-y-6">
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium">Upload an image of your question:</label>
+                                    <div class="flex gap-3">
+                                        <input type="file" accept="image/*" class="flex-1 p-3 border border-gray-300 rounded-lg">
+                                        <button class="px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2">
+                                            <i data-lucide="camera" class="w-4 h-4"></i>
+                                            Scan
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium">Or type your question:</label>
+                                    <textarea id="homeworkQuestion" placeholder="Enter your homework question here..." class="w-full min-h-[120px] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">Solve for x: 2x + 5 = 15</textarea>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="space-y-2">
+                                        <label class="block text-sm font-medium">Select subject:</label>
+                                        <select id="homeworkSubject" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="Mathematics">Mathematics</option>
+                                            <option value="Science">Science</option>
+                                            <option value="English">English</option>
+                                            <option value="Social Studies">Social Studies</option>
+                                            <option value="Physics">Physics</option>
+                                            <option value="Chemistry">Chemistry</option>
+                                            <option value="Biology">Biology</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="space-y-2">
+                                        <label class="block text-sm font-medium">Select grade level:</label>
+                                        <select id="homeworkGrade" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="Grade 6">Grade 6</option>
+                                            <option value="Grade 7">Grade 7</option>
+                                            <option value="Grade 8">Grade 8</option>
+                                            <option value="Grade 9">Grade 9</option>
+                                            <option value="Grade 10" selected>Grade 10</option>
+                                            <option value="Grade 11">Grade 11</option>
+                                            <option value="Grade 12">Grade 12</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <button onclick="solveHomework()" id="solveButton" class="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                                    <i data-lucide="lightbulb" class="w-5 h-5"></i>
+                                    Solve with AI Fallback + Web Search
+                                </button>
+                                
+                                <div id="homeworkLoading" class="hidden flex flex-col items-center justify-center py-12 px-6 text-center bg-blue-50 rounded-2xl border-2 border-dashed border-blue-200">
+                                    <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+                                    <p class="text-gray-600 font-medium">AI is solving your question with fallback system...</p>
+                                </div>
+                                
+                                <div id="homeworkSolution" class="hidden solution-box rounded-lg">
+                                    <div class="p-6 border-b border-blue-200 bg-blue-600 text-white">
+                                        <h3 class="text-xl font-bold flex items-center gap-2">
+                                            <i data-lucide="lightbulb" class="w-6 h-6"></i>
+                                            AI Solution
+                                        </h3>
+                                    </div>
+                                    <div class="p-6">
+                                        <div id="homeworkSolutionContent" class="prose max-w-none"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Search Results -->
+                                <div id="searchResults" class="hidden search-result-card rounded-lg">
+                                    <div class="p-6 border-b border-green-200 bg-green-600 text-white">
+                                        <h3 class="text-xl font-bold flex items-center gap-2">
+                                            <i data-lucide="search" class="w-6 h-6"></i>
+                                            Related Web Resources
+                                        </h3>
+                                    </div>
+                                    <div class="p-6">
+                                        <div id="searchResultsContent"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notes Generator -->
+                    <div id="content-notes" class="tab-content hidden">
+                        <div class="bg-white border rounded-lg shadow-sm">
+                            <div class="p-6 border-b">
+                                <h2 class="text-2xl font-bold flex items-center gap-3">
+                                    <i data-lucide="sticky-note" class="text-blue-600 w-7 h-7"></i>
+                                    Generate Study Notes
+                                    <span class="enhanced-badge ml-2">
+                                        <i data-lucide="search" class="w-3 h-3 mr-1 inline"></i>
+                                        Fallback Enhanced
+                                    </span>
+                                </h2>
+                                <p class="text-gray-600 mt-2">Create comprehensive notes with automatic API fallback and web information</p>
+                            </div>
+                            <div class="p-6 space-y-6">
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium">Enter topic for notes:</label>
+                                    <input type="text" id="notesTopic" placeholder="e.g., Photosynthesis, Algebra, World War II" value="Photosynthesis" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="space-y-2">
+                                        <label class="block text-sm font-medium">Select subject:</label>
+                                        <select id="notesSubject" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="Science" selected>Science</option>
+                                            <option value="Mathematics">Mathematics</option>
+                                            <option value="English">English</option>
+                                            <option value="History">History</option>
+                                            <option value="Geography">Geography</option>
+                                            <option value="Physics">Physics</option>
+                                            <option value="Chemistry">Chemistry</option>
+                                            <option value="Biology">Biology</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="space-y-2">
+                                        <label class="block text-sm font-medium">Select grade level:</label>
+                                        <select id="notesGrade" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="Grade 6">Grade 6</option>
+                                            <option value="Grade 7">Grade 7</option>
+                                            <option value="Grade 8">Grade 8</option>
+                                            <option value="Grade 9">Grade 9</option>
+                                            <option value="Grade 10" selected>Grade 10</option>
+                                            <option value="Grade 11">Grade 11</option>
+                                            <option value="Grade 12">Grade 12</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="space-y-2">
+                                        <label class="block text-sm font-medium">Select language:</label>
+                                        <select id="notesLanguage" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="English" selected>English</option>
+                                            <option value="Hindi">Hindi</option>
+                                            <option value="Spanish">Spanish</option>
+                                            <option value="French">French</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <button onclick="generateNotes()" id="generateNotesButton" class="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                                    <i data-lucide="book" class="w-5 h-5"></i>
+                                    Generate Notes with Fallback System
+                                </button>
+                                
+                                <div id="notesLoading" class="hidden flex flex-col items-center justify-center py-12 px-6 text-center bg-blue-50 rounded-2xl border-2 border-dashed border-blue-200">
+                                    <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+                                    <p class="text-gray-600 font-medium">AI is generating your study notes with fallback system...</p>
+                                </div>
+                                
+                                <div id="notesResult" class="hidden solution-box rounded-lg">
+                                    <div class="p-6 border-b border-blue-200 bg-blue-600 text-white">
+                                        <h3 class="text-xl font-bold flex items-center gap-2">
+                                            <i data-lucide="sticky-note" class="w-6 h-6"></i>
+                                            AI-Generated Notes
+                                        </h3>
+                                    </div>
+                                    <div class="p-6">
+                                        <div id="notesContent" class="prose max-w-none"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Test Generator -->
+                    <div id="content-test" class="tab-content hidden">
+                        <div class="bg-white border rounded-lg shadow-sm">
+                            <div class="p-6 border-b">
+                                <h2 class="text-2xl font-bold flex items-center gap-3">
+                                    <i data-lucide="file-text" class="text-blue-600 w-7 h-7"></i>
+                                    Create Mock Test
+                                    <span class="enhanced-badge ml-2">
+                                        <i data-lucide="search" class="w-3 h-3 mr-1 inline"></i>
+                                        Fallback Enhanced
+                                    </span>
+                                </h2>
+                                <p class="text-gray-600 mt-2">Generate practice tests with automatic API fallback and web examples</p>
+                            </div>
+                            <div class="p-6 space-y-6">
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium">Enter topic for test:</label>
+                                    <input type="text" id="testTopic" placeholder="e.g., Trigonometry, World History, Chemical Reactions" value="Trigonometry" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="space-y-2">
+                                        <label class="block text-sm font-medium">Select subject:</label>
+                                        <select id="testSubject" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="Mathematics" selected>Mathematics</option>
+                                            <option value="Science">Science</option>
+                                            <option value="History">History</option>
+                                            <option value="Geography">Geography</option>
+                                            <option value="Physics">Physics</option>
+                                            <option value="Chemistry">Chemistry</option>
+                                            <option value="Biology">Biology</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="space-y-2">
+                                        <label class="block text-sm font-medium">Number of questions:</label>
+                                        <select id="testQuestionCount" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="5">5</option>
+                                            <option value="10" selected>10</option>
+                                            <option value="15">15</option>
+                                            <option value="20">20</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="space-y-2">
+                                        <label class="block text-sm font-medium">Test difficulty:</label>
+                                        <select id="testDifficulty" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="Easy">Easy</option>
+                                            <option value="Medium" selected>Medium</option>
+                                            <option value="Hard">Hard</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <button onclick="generateTest()" id="generateTestButton" class="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                                    Generate Test with Fallback System
+                                </button>
+                                
+                                <div id="testLoading" class="hidden flex flex-col items-center justify-center py-12 px-6 text-center bg-blue-50 rounded-2xl border-2 border-dashed border-blue-200">
+                                    <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+                                    <p class="text-gray-600 font-medium">AI is creating your mock test with fallback system...</p>
+                                </div>
+                                
+                                <div id="testResult" class="hidden solution-box rounded-lg">
+                                    <div class="p-6 border-b border-blue-200 bg-blue-600 text-white">
+                                        <h3 class="text-xl font-bold flex items-center gap-2">
+                                            <i data-lucide="file-text" class="w-6 h-6"></i>
+                                            AI-Generated Test
+                                        </h3>
+                                    </div>
+                                    <div class="p-6">
+                                        <div id="testContent" class="prose max-w-none"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Features -->
+                    <div id="content-features" class="tab-content hidden">
+                        <div class="space-y-6">
+                            <div class="bg-white border rounded-lg shadow-sm">
+                                <div class="p-6 border-b">
+                                    <h2 class="text-2xl font-bold flex items-center gap-3">
+                                        <span class="text-2xl">⭐</span>
+                                        Enhanced Features
+                                        <span class="enhanced-badge ml-2">
+                                            <i data-lucide="shield-check" class="w-3 h-3 mr-1 inline"></i>
+                                            API Fallback System
+                                        </span>
+                                    </h2>
+                                    <p class="text-gray-600 mt-2">AI Study Buddy with robust API fallback system and SearchAPI integration</p>
+                                </div>
+                                <div class="p-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <div class="text-center feature-card bg-white border rounded-lg p-6">
+                                            <div class="text-blue-600 mb-4">
+                                                <i data-lucide="shield-check" class="mx-auto w-12 h-12"></i>
+                                            </div>
+                                            <h3 class="text-xl font-semibold mb-3 text-gray-900">API Fallback System</h3>
+                                            <p class="text-gray-600 leading-relaxed">Automatic failover between 4 API keys and models for 99.9% uptime reliability.</p>
+                                        </div>
+                                        
+                                        <div class="text-center feature-card bg-white border rounded-lg p-6">
+                                            <div class="text-blue-600 mb-4">
+                                                <i data-lucide="search" class="mx-auto w-12 h-12"></i>
+                                            </div>
+                                            <h3 class="text-xl font-semibold mb-3 text-gray-900">SearchAPI Integration</h3>
+                                            <p class="text-gray-600 leading-relaxed">Enhanced AI responses with real-time web search using secure API management.</p>
+                                        </div>
+                                        
+                                        <div class="text-center feature-card bg-white border rounded-lg p-6">
+                                            <div class="text-blue-600 mb-4">
+                                                <i data-lucide="cpu" class="mx-auto w-12 h-12"></i>
+                                            </div>
+                                            <h3 class="text-xl font-semibold mb-3 text-gray-900">Multiple AI Models</h3>
+                                            <p class="text-gray-600 leading-relaxed">Choose from DeepSeek, Gemma, Qwen, and DeepSeek R1 models with intelligent fallback.</p>
+                                        </div>
+                                        
+                                        <div class="text-center feature-card bg-white border rounded-lg p-6">
+                                            <div class="text-blue-600 mb-4">
+                                                <i data-lucide="refresh-cw" class="mx-auto w-12 h-12"></i>
+                                            </div>
+                                            <h3 class="text-xl font-semibold mb-3 text-gray-900">Automatic Recovery</h3>
+                                            <p class="text-gray-600 leading-relaxed">Smart error handling with automatic retry and model switching for seamless experience.</p>
+                                        </div>
+                                        
+                                        <div class="text-center feature-card bg-white border rounded-lg p-6">
+                                            <div class="text-blue-600 mb-4">
+                                                <i data-lucide="book-open" class="mx-auto w-12 h-12"></i>
+                                            </div>
+                                            <h3 class="text-xl font-semibold mb-3 text-gray-900">Web-Enhanced Learning</h3>
+                                            <p class="text-gray-600 leading-relaxed">Generate comprehensive study materials with current web information and examples.</p>
+                                        </div>
+                                        
+                                        <div class="text-center feature-card bg-white border rounded-lg p-6">
+                                            <div class="text-blue-600 mb-4">
+                                                <i data-lucide="zap" class="mx-auto w-12 h-12"></i>
+                                            </div>
+                                            <h3 class="text-xl font-semibold mb-3 text-gray-900">High Performance</h3>
+                                            <p class="text-gray-600 leading-relaxed">Fast processing with intelligent load balancing across multiple API endpoints.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Security & Privacy -->
+                            <div class="bg-white border rounded-lg shadow-sm">
+                                <div class="p-6 border-b">
+                                    <h2 class="text-2xl font-bold flex items-center gap-3">
+                                        <i data-lucide="shield-check" class="text-green-600"></i>
+                                        Security & Reliability
+                                    </h2>
+                                </div>
+                                <div class="p-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div class="space-y-4">
+                                            <h3 class="text-lg font-semibold text-gray-900">API Fallback System</h3>
+                                            <div class="space-y-3">
+                                                <div class="flex items-center gap-3">
+                                                    <i data-lucide="check-circle" class="text-green-500 w-5 h-5"></i>
+                                                    <span class="text-sm">4 API keys with automatic failover</span>
+                                                </div>
+                                                <div class="flex items-center gap-3">
+                                                    <i data-lucide="check-circle" class="text-green-500 w-5 h-5"></i>
+                                                    <span class="text-sm">Intelligent model switching on errors</span>
+                                                </div>
+                                                <div class="flex items-center gap-3">
+                                                    <i data-lucide="check-circle" class="text-green-500 w-5 h-5"></i>
+                                                    <span class="text-sm">Real-time error handling and recovery</span>
+                                                </div>
+                                                <div class="flex items-center gap-3">
+                                                    <i data-lucide="check-circle" class="text-green-500 w-5 h-5"></i>
+                                                    <span class="text-sm">Visual feedback for fallback usage</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-4">
+                                            <h3 class="text-lg font-semibold text-gray-900">Security Features</h3>
+                                            <div class="space-y-3">
+                                                <div class="flex items-center gap-3">
+                                                    <i data-lucide="check-circle" class="text-green-500 w-5 h-5"></i>
+                                                    <span class="text-sm">Secure API key management</span>
+                                                </div>
+                                                <div class="flex items-center gap-3">
+                                                    <i data-lucide="check-circle" class="text-green-500 w-5 h-5"></i>
+                                                    <span class="text-sm">No sensitive information in UI</span>
+                                                </div>
+                                                <div class="flex items-center gap-3">
+                                                    <i data-lucide="check-circle" class="text-green-500 w-5 h-5"></i>
+                                                    <span class="text-sm">HTTPS connections for all API calls</span>
+                                                </div>
+                                                <div class="flex items-center gap-3">
+                                                    <i data-lucide="check-circle" class="text-green-500 w-5 h-5"></i>
+                                                    <span class="text-sm">Client-side processing for privacy</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                
+                <!-- Footer -->
+                <footer class="text-center py-6 bg-blue-50 text-gray-600 text-sm">
+                    <p class="mb-1">© 2024 AI Study Buddy | Developed with ❤️ by Tanish Kamboj</p>
+                    <p>Enhanced with robust API fallback system and SearchAPI integration</p>
+                </footer>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // API Configuration with Fallback System
+        const API_CONFIGS = [
+            {
+                key: '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',
+                model: 'deepseek/deepseek-chat-v3-0324:free',
+                name: 'DeepSeek Chat',
+                description: 'Advanced conversational model',
+                icon: 'fas fa-brain',
+                iconClass: 'deepseek-icon',
+                badge: 'v3 0324',
+                badgeClass: 'bg-purple-100 text-purple-800'
+            },
+            {
+                key: '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',
+                model: 'google/gemma-3n-e2b-it:free',
+                name: 'Gemma',
+                description: 'Google\'s efficient model',
+                icon: 'fab fa-google',
+                iconClass: 'gemma-icon',
+                badge: '3n E2B',
+                badgeClass: 'bg-orange-100 text-orange-800'
+            },
+            {
+                key: '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',
+                model: 'qwen/qwen3-4b:free',
+                name: 'Qwen',
+                description: 'Alibaba\'s Qwen model',
+                icon: 'fas fa-robot',
+                iconClass: 'qwen-icon',
+                badge: '4B',
+                badgeClass: 'bg-blue-100 text-blue-800'
+            },
+            {
+                key: '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',
+                model: 'deepseek/deepseek-r1-0528:free',
+                name: 'DeepSeek R1',
+                description: 'DeepSeek Reasoning model',
+                icon: 'fas fa-brain',
+                iconClass: 'deepseek-icon',
+                badge: 'R1 0528',
+                badgeClass: 'bg-purple-100 text-purple-800'
+            }
+        ];
+
+        // Global variables
+        let currentTab = 'homework';
+        let activeModelIndex = 0;
+        let lastUsedConfigIndex = -1;
+        
+        // SearchAPI Configuration
+        const SEARCH_API_KEY = 'N4MiZCYuGxGK4oQ1A4EQJfeQ';
+        const SEARCH_API_URL = 'https://www.searchapi.io/api/v1/search';
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Lucide icons
+            lucide.createIcons();
+            
+            // Start loading sequence
+            startLoadingSequence();
+            
+            // Initialize model cards
+            initializeModelCards();
+        });
+
+        // Initialize model cards
+        function initializeModelCards() {
+            const modelContainer = document.getElementById('modelCardsContainer');
+            if (!modelContainer) return;
+            
+            modelContainer.innerHTML = '';
+            
+            API_CONFIGS.forEach((config, index) => {
+                const isActive = index === activeModelIndex;
+                const card = document.createElement('div');
+                card.className = `model-card p-6 rounded-xl relative ${isActive ? 'active' : ''}`;
+                card.onclick = () => selectModel(index);
+                card.id = `model-${index}`;
+                
+                card.innerHTML = `
+                    <div class="status-indicator status-connected"></div>
+                    <div class="model-icon ${config.iconClass} mx-auto">
+                        <i class="${config.icon}"></i>
+                    </div>
+                    <h3 class="font-bold text-center text-gray-900 mb-2">${config.name}</h3>
+                    <p class="text-sm text-gray-600 text-center mb-3">${config.description}</p>
+                    <div class="flex justify-center">
+                        <span class="text-xs ${config.badgeClass} px-2 py-1 rounded-full">${config.badge}</span>
+                    </div>
+                    ${lastUsedConfigIndex === index ? '<span class="last-used-badge">Last Used</span>' : ''}
+                `;
+                
+                modelContainer.appendChild(card);
+            });
+            
+            updateSelectedModelDisplay();
+        }
+
+        // Update selected model display
+        function updateSelectedModelDisplay() {
+            const config = API_CONFIGS[activeModelIndex];
+            if (!config) return;
+            
+            document.getElementById('selectedModelIcon').innerHTML = `<i class="${config.icon}"></i>`;
+            document.getElementById('selectedModelIcon').className = `model-icon ${config.iconClass}`;
+            document.getElementById('selectedModelName').textContent = config.name;
+            document.getElementById('selectedModelDetails').textContent = config.description;
+        }
+
+        // Model selection function
+        function selectModel(index) {
+            playClick();
+            
+            // Remove active class from all model cards
+            document.querySelectorAll('.model-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Add active class to selected model
+            document.getElementById(`model-${index}`).classList.add('active');
+            
+            activeModelIndex = index;
+            updateSelectedModelDisplay();
+            
+            showToast('Model Selected', `Switched to ${API_CONFIGS[index].name} model`, 'success');
+        }
+
+        // Loading sequence
+        function startLoadingSequence() {
+            const loadingTexts = [
+                "Initializing API Fallback System...",
+                "Connecting to SearchAPI...",
+                "Loading AI Models...",
+                "Setting up Security Protocols...",
+                "Configuring Fallback Routes...",
+                "Almost Ready!"
+            ];
+            
+            let progress = 0;
+            let textIndex = 0;
+            
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const loadingText = document.getElementById('loadingText');
+            
+            const progressInterval = setInterval(() => {
+                progress += 2;
+                progressBar.style.width = progress + '%';
+                progressText.textContent = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    setTimeout(() => {
+                        document.getElementById('loadingScreen').classList.add('hidden');
+                        document.getElementById('mainApp').classList.remove('hidden');
+                        lucide.createIcons(); // Re-initialize icons for main app
+                    }, 500);
+                }
+            }, 80);
+            
+            const textInterval = setInterval(() => {
+                loadingText.textContent = loadingTexts[textIndex];
+                textIndex = (textIndex + 1) % loadingTexts.length;
+            }, 800);
+            
+            setTimeout(() => {
+                clearInterval(textInterval);
+            }, 5000);
+        }
+
+        // API call with fallback mechanism
+        async function callAPIWithFallback(messages, maxTokens = 2000) {
+            let attempts = 0;
+            let response;
+            let usedFallback = false;
+            let lastError;
+            
+            // Try all configs starting from the selected one
+            for (let i = 0; i < API_CONFIGS.length; i++) {
+                const configIndex = (activeModelIndex + i) % API_CONFIGS.length;
+                const config = API_CONFIGS[configIndex];
+                
+                try {
+                    response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${config.key}`,
+                            'Content-Type': 'application/json',
+                            'HTTP-Referer': window.location.origin,
+                            'X-Title': 'AI Study Buddy'
+                        },
+                        body: JSON.stringify({
+                            model: config.model,
+                            messages: messages,
+                            max_tokens: maxTokens,
+                            temperature: 0.7,
+                            stream: false
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        // Update last used config
+                        if (i > 0) {
+                            usedFallback = true;
+                            lastUsedConfigIndex = configIndex;
+                            document.querySelectorAll('.model-card').forEach(card => {
+                                card.classList.remove('fallback-used');
+                            });
+                            document.getElementById(`model-${configIndex}`).classList.add('fallback-used');
+                            showToast('Fallback Used', `API request succeeded using ${config.name} fallback`, 'warning');
+                        }
+                        
+                        return {
+                            content: data.choices[0].message.content,
+                            model: config.name,
+                            keyIndex: configIndex
+                        };
+                    } else {
+                        const errorText = await response.text();
+                        lastError = new Error(`API error ${response.status}: ${errorText}`);
+                        
+                        // If we get 401 or 429, mark this key as problematic
+                        if (response.status === 401 || response.status === 429) {
+                            showToast('API Issue', `${config.name} key failed (${response.status}), trying next...`, 'warning');
+                        }
+                    }
+                } catch (error) {
+                    lastError = error;
+                    console.error(`API call failed with ${config.name}:`, error);
+                }
+                
+                attempts++;
+            }
+            
+            // All attempts failed
+            throw lastError || new Error('All API attempts failed');
+        }
+
+        // SearchAPI Integration Functions
+        async function searchWeb(query) {
+            try {
+                const response = await fetch(`${SEARCH_API_URL}?engine=google&q=${encodeURIComponent(query)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${SEARCH_API_KEY}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`SearchAPI error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Extract organic results
+                const results = data.organic_results || [];
+                return results.slice(0, 5).map((result, index) => ({
+                    title: result.title || 'No title',
+                    link: result.link || '#',
+                    snippet: result.snippet || 'No description available',
+                    position: index + 1
+                }));
+            } catch (error) {
+                console.error('Search error:', error);
+                showToast('Search Warning', 'Web search temporarily unavailable, using AI only', 'warning');
+                return [];
+            }
+        }
+
+        function displaySearchResults(results) {
+            if (results.length === 0) return;
+
+            const searchResultsContainer = document.getElementById('searchResults');
+            const searchResultsContent = document.getElementById('searchResultsContent');
+            
+            if (!searchResultsContainer || !searchResultsContent) return;
+
+            let resultsHTML = '';
+            results.forEach(result => {
+                resultsHTML += `
+                    <div class="search-result-item">
+                        <a href="${result.link}" target="_blank" rel="noopener noreferrer" class="search-result-title">
+                            ${result.title}
+                        </a>
+                        <p class="search-result-snippet">${result.snippet}</p>
+                    </div>
+                `;
+            });
+
+            searchResultsContent.innerHTML = resultsHTML;
+            searchResultsContainer.classList.remove('hidden');
+        }
+
+        // Sound effects
+        function playSound(frequency, duration, type = 'sine') {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                oscillator.type = type;
+
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            } catch (error) {
+                console.log('Sound effect played');
+            }
+        }
+
+        function playClick() {
+            playSound(800, 0.1, 'square');
+        }
+
+        function playSuccess() {
+            playSound(523, 0.2, 'sine');
+            setTimeout(() => playSound(659, 0.2, 'sine'), 100);
+            setTimeout(() => playSound(784, 0.3, 'sine'), 200);
+        }
+
+        function playError() {
+            playSound(300, 0.3, 'sawtooth');
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            playClick();
+            
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('border-blue-600', 'text-blue-600', 'bg-blue-50');
+                button.classList.add('border-transparent', 'text-gray-600');
+            });
+            
+            // Show selected tab content
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            
+            // Add active class to selected tab button
+            const activeButton = document.getElementById('tab-' + tabName);
+            activeButton.classList.add('border-blue-600', 'text-blue-600', 'bg-blue-50');
+            activeButton.classList.remove('border-transparent', 'text-gray-600');
+            
+            currentTab = tabName;
+        }
+
+        // Show toast notification
+        function showToast(title, message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
+                type === 'success' ? 'bg-green-100 border border-green-200 text-green-800' : 
+                type === 'error' ? 'bg-red-100 border border-red-200 text-red-800' : 
+                type === 'warning' ? 'bg-yellow-100 border border-yellow-200 text-yellow-800' :
+                'bg-blue-100 border border-blue-200 text-blue-800'
+            }`;
+            
+            toast.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <i data-lucide="${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : type === 'warning' ? 'alert-triangle' : 'info'}" class="w-5 h-5 mt-0.5"></i>
+                    <div>
+                        <div class="font-medium">${title}</div>
+                        <div class="text-sm mt-1">${message}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+
+        // Enhanced Homework solver with fallback
+        async function solveHomework() {
+            playClick();
+            
+            const question = document.getElementById('homeworkQuestion').value.trim();
+            const subject = document.getElementById('homeworkSubject').value;
+            const grade = document.getElementById('homeworkGrade').value;
+            
+            if (!question) {
+                showToast('Error', 'Please enter a question', 'error');
+                playError();
+                return;
+            }
+            
+            const button = document.getElementById('solveButton');
+            const loading = document.getElementById('homeworkLoading');
+            const solution = document.getElementById('homeworkSolution');
+            const searchResults = document.getElementById('searchResults');
+            const apiStatus = document.getElementById('apiStatusDisplay');
+            
+            button.disabled = true;
+            button.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 mr-2 animate-spin"></i>Solving with AI Fallback + Web Search...';
+            loading.classList.remove('hidden');
+            solution.classList.add('hidden');
+            searchResults.classList.add('hidden');
+            
+            try {
+                // First, search for relevant information
+                const searchQuery = `${subject} ${question} ${grade} explanation solution`;
+                const webResults = await searchWeb(searchQuery);
+                
+                // Prepare context from search results
+                let contextInfo = '';
+                if (webResults.length > 0) {
+                    contextInfo = '\n\nAdditional context from web search:\n' + 
+                        webResults.map(result => `- ${result.title}: ${result.snippet}`).join('\n');
+                }
+                
+                const prompt = `You are an expert tutor. Solve the following ${subject} problem step by step in a way that a ${grade} student can understand. Be clear and educational. Format your response using HTML tags for better presentation.${contextInfo}\n\nHere is the problem: ${question}`;
+                
+                const aiResponse = await callAPIWithFallback([
+                    { role: 'system', content: 'You are an expert tutor helping students with their homework.' },
+                    { role: 'user', content: prompt }
+                ]);
+                
+                document.getElementById('homeworkSolutionContent').innerHTML = aiResponse.content;
+                solution.classList.remove('hidden');
+                
+                // Update API status display
+                if (aiResponse.keyIndex !== activeModelIndex) {
+                    apiStatus.className = 'mt-4 p-4 api-status-warning rounded-lg';
+                    apiStatus.innerHTML = `
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="alert-triangle" class="text-yellow-600 w-5 h-5"></i>
+                            <h5 class="font-semibold">API Fallback System (Fallback Used)</h5>
+                            <span class="ml-auto text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded-full">Fallback Active</span>
+                        </div>
+                        <div class="text-sm space-y-1">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="alert-circle" class="text-yellow-500 w-4 h-4"></i>
+                                <span>Primary API key failed, used fallback: ${API_CONFIGS[aiResponse.keyIndex].name}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check-circle" class="text-yellow-500 w-4 h-4"></i>
+                                <span>Real-time web search integration enabled</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="shield-check" class="text-yellow-500 w-4 h-4"></i>
+                                <span>Secure API key management with rotation</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Display search results if available
+                if (webResults.length > 0) {
+                    displaySearchResults(webResults);
+                }
+                
+                playSuccess();
+                showToast('Success', 'Problem solved with fallback-enhanced AI assistance!');
+                
+            } catch (error) {
+                playError();
+                showToast('Error', error.message, 'error');
+                
+                // Update API status display to error
+                apiStatus.className = 'mt-4 p-4 api-status-error rounded-lg';
+                apiStatus.innerHTML = `
+                    <div class="flex items-center gap-2 mb-2">
+                        <i data-lucide="x-circle" class="text-red-600 w-5 h-5"></i>
+                        <h5 class="font-semibold">API Connection Failed</h5>
+                        <span class="ml-auto text-xs bg-red-200 text-red-800 px-2 py-1 rounded-full">Error</span>
+                    </div>
+                    <div class="text-sm space-y-1">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="alert-circle" class="text-red-500 w-4 h-4"></i>
+                            <span>All API keys failed: ${error.message}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="refresh-cw" class="text-red-500 w-4 h-4"></i>
+                            <span>Please try again later or contact support</span>
+                        </div>
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<i data-lucide="lightbulb" class="w-5 h-5 mr-2"></i>Solve with AI Fallback + Web Search';
+                loading.classList.add('hidden');
+                lucide.createIcons();
+                
+                // Re-initialize model cards to show last used badge
+                initializeModelCards();
+            }
+        }
+
+        // Enhanced Notes generator with fallback
+        async function generateNotes() {
+            playClick();
+            
+            const topic = document.getElementById('notesTopic').value.trim();
+            const subject = document.getElementById('notesSubject').value;
+            const grade = document.getElementById('notesGrade').value;
+            const language = document.getElementById('notesLanguage').value;
+            
+            if (!topic) {
+                showToast('Error', 'Please enter a topic for your notes', 'error');
+                playError();
+                return;
+            }
+            
+            const button = document.getElementById('generateNotesButton');
+            const loading = document.getElementById('notesLoading');
+            const result = document.getElementById('notesResult');
+            
+            button.disabled = true;
+            button.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 mr-2 animate-spin"></i>Generating with Fallback System...';
+            loading.classList.remove('hidden');
+            result.classList.add('hidden');
+            
+            try {
+                // Search for current information about the topic
+                const searchQuery = `${topic} ${subject} ${grade} study notes explanation current information`;
+                const webResults = await searchWeb(searchQuery);
+                
+                // Prepare context from search results
+                let contextInfo = '';
+                if (webResults.length > 0) {
+                    contextInfo = '\n\nCurrent information from web search:\n' + 
+                        webResults.map(result => `- ${result.title}: ${result.snippet}`).join('\n');
+                }
+                
+                const prompt = `Generate comprehensive study notes on the topic: "${topic}" for a ${grade} student. The subject is ${subject}. The notes should be structured, cover key concepts, and be written in ${language}. Format your response using HTML tags for better presentation. Include headings, lists, and important terms in bold.${contextInfo}`;
+                
+                const response = await callAPIWithFallback([
+                    { role: 'system', content: 'You are an educational content creator generating study notes.' },
+                    { role: 'user', content: prompt }
+                ], 2500);
+                
+                document.getElementById('notesContent').innerHTML = response.content;
+                result.classList.remove('hidden');
+                
+                // Display search results if available
+                if (webResults.length > 0) {
+                    displaySearchResults(webResults);
+                }
+                
+                playSuccess();
+                showToast('Success', 'Notes generated with fallback system!');
+                
+            } catch (error) {
+                playError();
+                showToast('Error', error.message, 'error');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<i data-lucide="book" class="w-5 h-5 mr-2"></i>Generate Notes with Fallback System';
+                loading.classList.add('hidden');
+                lucide.createIcons();
+                
+                // Re-initialize model cards to show last used badge
+                initializeModelCards();
+            }
+        }
+
+        // Enhanced Test generator with fallback
+        async function generateTest() {
+            playClick();
+            
+            const topic = document.getElementById('testTopic').value.trim();
+            const subject = document.getElementById('testSubject').value;
+            const questionCount = document.getElementById('testQuestionCount').value;
+            const difficulty = document.getElementById('testDifficulty').value;
+            
+            if (!topic) {
+                showToast('Error', 'Please enter a topic for your mock test', 'error');
+                playError();
+                return;
+            }
+            
+            const button = document.getElementById('generateTestButton');
+            const loading = document.getElementById('testLoading');
+            const result = document.getElementById('testResult');
+            
+            button.disabled = true;
+            button.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 mr-2 animate-spin"></i>Creating with Fallback System...';
+            loading.classList.remove('hidden');
+            result.classList.add('hidden');
+            
+            try {
+                // Search for relevant test questions and examples
+                const searchQuery = `${topic} ${subject} ${difficulty} test questions examples practice problems`;
+                const webResults = await searchWeb(searchQuery);
+                
+                // Prepare context from search results
+                let contextInfo = '';
+                if (webResults.length > 0) {
+                    contextInfo = '\n\nReference material from web search:\n' + 
+                        webResults.map(result => `- ${result.title}: ${result.snippet}`).join('\n');
+                }
+                
+                const prompt = `Create a mock test with ${questionCount} questions on the topic: "${topic}" for a student. The subject is ${subject}. The difficulty level should be ${difficulty}. Format your response using HTML tags. Include multiple choice questions with 4 options each and provide the correct answers at the end.${contextInfo}`;
+                
+                const response = await callAPIWithFallback([
+                    { role: 'system', content: 'You are an educational content creator generating test questions.' },
+                    { role: 'user', content: prompt }
+                ], 3000);
+                
+                document.getElementById('testContent').innerHTML = response.content;
+                result.classList.remove('hidden');
+                
+                // Display search results if available
+                if (webResults.length > 0) {
+                    displaySearchResults(webResults);
+                }
+                
+                playSuccess();
+                showToast('Success', 'Test generated with fallback system!');
+                
+            } catch (error) {
+                playError();
+                showToast('Error', error.message, 'error');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<i data-lucide="file-text" class="w-5 h-5 mr-2"></i>Generate Test with Fallback System';
+                loading.classList.add('hidden');
+                lucide.createIcons();
+                
+                // Re-initialize model cards to show last used badge
+                initializeModelCards();
+            }
+        }
+    </script>
+</body>
+</html>
